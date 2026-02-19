@@ -1,3 +1,5 @@
+package gameoflife;
+
 import javafx.scene.shape.Rectangle;
 
 public class LifeCell extends Rectangle {

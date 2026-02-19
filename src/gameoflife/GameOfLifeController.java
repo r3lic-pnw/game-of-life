@@ -1,3 +1,5 @@
+package gameoflife;
+
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -183,7 +185,7 @@ public class GameOfLifeController {
         int generationCount = statsData.get(0).getValue();
         int deceasedCount = statsData.get(2).getValue();
 
-        // Loop through every LifeCell to calculate its fate
+        // Loop through every RunGame.LifeCell to calculate its fate
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
                 LifeCell cell = gameState[r][c];
@@ -230,7 +232,7 @@ public class GameOfLifeController {
     private int countLivingNeighbors(int row, int col) {
         int count = 0;
 
-        // Check the 3x3 grid around the LifeCell
+        // Check the 3x3 grid around the RunGame.LifeCell
         // r is the row offset (-1, 0, 1)
         // c is the col offset (-1, 0, 1)
         for (int r = -1; r <= 1; r++) {
@@ -307,6 +309,10 @@ public class GameOfLifeController {
 
         public void setValue(int value) {
             this.value.set(value);
+        }
+
+        public String getStat() {
+            return stat.get();
         }
     }
 
