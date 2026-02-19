@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GameOfLifeController">
+    <center>
+        <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <content>
+                <GridPane fx:id="gameBoard" prefHeight="200.0" prefWidth="200.0">
+                </GridPane>
+            </content>
+        </ScrollPane>
+    </center>
+    <top>
+        <MenuBar BorderPane.alignment="CENTER">
+            <menus>
+                <Menu mnemonicParsing="false" text="File">
+                    <items>
+                        <MenuItem mnemonicParsing="false" text="Close" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Edit">
+                    <items>
+                        <MenuItem mnemonicParsing="false" text="Delete" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Help">
+                    <items>
+                        <MenuItem mnemonicParsing="false" text="About" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
+    <right>
+          <TitledPane animated="false" collapsible="false" maxHeight="1.7976931348623157E308" prefHeight="378.0" prefWidth="202.0" text="Control Panel" BorderPane.alignment="TOP_CENTER">
+              <content>
+                  <AnchorPane maxHeight="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="300.0" prefWidth="200.0">
+                      <children>
+                          <Label layoutX="14.0" layoutY="14.0" prefHeight="17.0" prefWidth="56.0" text="Columns" />
+                          <Label layoutX="14.0" layoutY="50.0" prefHeight="17.0" prefWidth="44.0" text="Rows" />
+                          <Spinner fx:id="colSpinner" editable="true" layoutX="111.0" layoutY="10.0" prefHeight="25.0" prefWidth="85.0" />
+                          <Spinner fx:id="rowSpinner" editable="true" layoutX="110.0" layoutY="46.0" prefHeight="25.0" prefWidth="86.0" />
+                          <Button fx:id="startStopButton" alignment="BOTTOM_CENTER" defaultButton="true" layoutX="14.0" layoutY="310.0" mnemonicParsing="false" onAction="#onStartStopClicked" prefHeight="25.0" prefWidth="72.0" text="Start" AnchorPane.bottomAnchor="0.0" />
+                          <Button layoutX="111.0" layoutY="310.0" mnemonicParsing="false" onAction="#onResetClicked" prefHeight="25.0" prefWidth="72.0" text="Reset" AnchorPane.bottomAnchor="0.0" />
+                  <Label layoutX="14.0" layoutY="85.0" prefHeight="17.0" prefWidth="60.0" text="Cell Width" />
+                  <Spinner fx:id="cellWidthSpinner" editable="true" layoutX="110.0" layoutY="81.0" prefHeight="25.0" prefWidth="86.0" />
+                  <Label layoutX="14.0" layoutY="123.0" prefHeight="17.0" prefWidth="69.0" text="Cell Height" />
+                  <Spinner fx:id="cellHeightSpinner" editable="true" layoutX="110.0" layoutY="119.0" prefHeight="25.0" prefWidth="86.0" />
+                  <Label layoutX="14.0" layoutY="275.0" text="Speed (ms)" />
+                  <Slider fx:id="speedSlider" layoutX="14.0" layoutY="295.0" majorTickUnit="200.0" max="1000.0" min="10.0" minorTickCount="4" prefHeight="14.0" prefWidth="166.0" showTickMarks="true" snapToTicks="true" value="200.0" />
+                  <Label layoutX="14.0" layoutY="161.0" prefHeight="17.0" prefWidth="91.0" text="Cell Color (Dead)" />
+                  <Label layoutX="14.0" layoutY="199.0" prefHeight="17.0" prefWidth="86.0" text="Cell Color (Live)" />
+                  <Label layoutX="14.0" layoutY="237.0" prefHeight="17.0" prefWidth="83.0" text="Grid Line Color" />
+                  <ComboBox fx:id="deadColorComboBox" layoutX="110.0" layoutY="157.0" prefHeight="25.0" prefWidth="86.0" />
+                  <ComboBox fx:id="liveColorComboBox" layoutX="110.0" layoutY="195.0" prefHeight="25.0" prefWidth="86.0" />
+                  <ComboBox fx:id="strokeColorComboBox" layoutX="110.0" layoutY="233.0" prefHeight="25.0" prefWidth="86.0" />
+                      </children>
+                  </AnchorPane>
+              </content>
+          </TitledPane>
+    </right>
+   <bottom>
+      <TitledPane animated="false" expanded="false" text="Statistics" BorderPane.alignment="CENTER">
+        <content>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <TableView fx:id="statsTable" prefHeight="180.0" prefWidth="598.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <columns>
+                      <TableColumn fx:id="statCol" maxWidth="1.7976931348623157E308" minWidth="-1.0" prefWidth="100.0" text="Stat" />
+                      <TableColumn fx:id="valueCol" maxWidth="1.7976931348623157E308" minWidth="-1.0" prefWidth="100.0" text="Value" />
+                    </columns>
+                  </TableView>
+               </children></AnchorPane>
+        </content>
+      </TitledPane>
+   </bottom>
+</BorderPane>
