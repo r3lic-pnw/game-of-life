@@ -21,7 +21,6 @@ import javafx.scene.shape.Rectangle;
  * @see             javafx.scene.shape.Rectangle
  */
 public class LifeCell extends Rectangle {
-
     /**
      * Constructs a LifeCell with the specified dimensions.
      * Initializes the rectangle which will be placed within the

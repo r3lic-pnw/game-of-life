@@ -1,24 +1,26 @@
 package gameoflife;
 
 /**
- * Handles the core simulation logic for Conway's Game of Life.
- * This class maintains the state of the grid and applies the rules of
- * evolution to calculate successive generations.
+ * Logical model for the Game of Life grid.
+ * Holds the state of the cells in a 2-D array of {@code AbstractCell} objects,
+ * enabling polymorphic behavior based on cell type. It provides methods for
+ * retrieving and updating the board state, calculating the next board state
+ * by delegating logic to individual cells, and tracking simulation statistics.
  *
  * <pre>
  * File            LifeLogic.java
  * Project         Game of Life
  * Platform        PC, Windows 11; JDK 25
  * Course          CS 142
- * Date            02/22/2026
+ * Date            02/24/2026
  * </pre>
  *
  * @author          Jarrell Quincy | r3lic
- * @version         1.0.0
+ * @version         2.0.0
  * @since           1.0.0
  */
 public class LifeLogic {
-    private boolean[][] boardState;
+    private AbstractCell[][] boardState;
     private int logicRows;
     private int logicCols;
 
@@ -27,103 +29,96 @@ public class LifeLogic {
     private int deceasedCount = 0;
 
     /**
-     * Constructs a new LifeLogic instance with specified dimensions.
-     * Initializes an empty (dead) board.
+     * Constructs a new logical game board with the specified dimensions.
+     * All cells default to dead {@code AnimalCell} instances.
      *
-     * <pre>
-     * Postconditions:  A boolean grid of size [rows][cols] is initialized.
-     * All cells are set to {@code false} (dead).
-     * </pre>
-     *
-     * @param rows the number of rows in the grid (must be positive)
-     * @param cols the number of columns in the grid (must be positive)
+     * @param rows the number of rows in the grid
+     * @param cols the number of columns in the grid
      */
     public LifeLogic(int rows, int cols) {
         logicRows = rows;
         logicCols = cols;
-        boardState = new boolean[logicRows][logicCols];
+        boardState = new AbstractCell[logicRows][logicCols];
+
+        // Initialize the board with dead AnimalCells by default
+        for (int r = 0; r < logicRows; r++) {
+            for (int c = 0; c < logicCols; c++) {
+                boardState[r][c] = new AnimalCell(false);
+            }
+        }
     }
 
     /**
-     * Returns a deep copy of the current board state.
-     * Creating a copy ensures that external classes cannot modify the internal
-     * state directly.
+     * Returns a shallow copy of the 2D {@code AbstractCell} array structure.
+     * Note: The cell objects themselves are not cloned.
      *
-     * <pre>
-     * Implementation:  Performs a row-by-row {@code System.arraycopy}.
-     * </pre>
-     *
-     * @return a 2D boolean array representing the current life states
+     * @return a 2D array representing the current board layout
      */
-    public boolean[][] getBoardState() {
-        boolean[][] boardStateCopy = new boolean[logicRows][logicCols];
-        for (int row = 0; row < this.logicRows; row++) {
-            System.arraycopy(this.boardState[row], 0, boardStateCopy[row], 0, this.logicCols);
+    public AbstractCell[][] getBoardState() {
+        AbstractCell[][] boardStateCopy = new AbstractCell[logicRows][logicCols];
+        for (int r = 0; r < logicRows; r++) {
+            System.arraycopy(boardState[r], 0, boardStateCopy[r], 0, logicCols);
         }
         return boardStateCopy;
     }
 
     /**
-     * Updates the internal board state and synchronizes dimensions.
-     * * @param boardState the new 2D boolean array to use as the state (must not be null)
+     * Updates the internal board state with a new 2D array of cells
+     * and synchronizes the board dimensions.
+     *
+     * @param boardState the new 2D array of {@code AbstractCell} objects
      */
-    public void setBoardState(boolean[][] boardState) {
-        int newRows = boardState.length;
-        int newCols = boardState[0].length;
-        logicRows = newRows;
-        logicCols = newCols;
+    public void setBoardState(AbstractCell[][] boardState) {
+        logicRows = boardState.length;
+        logicCols = boardState[0].length;
         this.boardState = boardState;
     }
 
     /**
-     * Applies Conway's Rules of Life to transition the board to the next generation.
-     * * <pre>
-     * Algorithm:       1. Any live cell with 2 or 3 neighbors survives.
-     * 2. Any dead cell with exactly 3 neighbors becomes alive.
-     * 3. All other cells die or stay dead.
-     * Time Complexity: O(rows * cols)
-     * Postconditions:  boardState is updated to the new generation.
-     * generationCount is incremented.
-     * livingCount and deceasedCount are updated.
-     * </pre>
+     * Processes the entire board by first telling each cell to calculate its
+     * next state based on its neighbors, then applying those states and
+     * updating the generation statistics.
      */
     public void calculateNextGeneration() {
-        boolean[][] nextBoardState = new boolean[boardState.length][boardState[0].length];
-        livingCount = 0;
+        int newlyDeceased = 0;
+        int newlyLiving = 0;
 
+        // Calculate next state for all cells
         for (int r = 0; r < logicRows; r++) {
             for (int c = 0; c < logicCols; c++) {
-                boolean cellAlive = boardState[r][c];
                 int livingNeighbors = countLivingNeighbors(r, c);
+                boardState[r][c].calculateNextState(livingNeighbors);
+            }
+        }
 
-                if (cellAlive) {
-                    boolean survived = livingNeighbors == 2 || livingNeighbors == 3;
-                    nextBoardState[r][c] = survived;
-                    livingCount += survived ? 1 : 0;
-                    deceasedCount += survived ? 0 : 1;
-                } else {
-                    if (livingNeighbors == 3) {
-                        nextBoardState[r][c] = true;
-                        livingCount++;
-                    }
+        // Apply the calculated states and track statistics
+        livingCount = 0;
+        for(int r = 0; r < logicRows; r++){
+            for(int c = 0; c < logicCols; c++){
+                boolean wasAlive = boardState[r][c].isAlive();
+                boardState[r][c].applyNextState();
+                boolean isNowAlive = boardState[r][c].isAlive();
+
+                if (isNowAlive) {
+                    livingCount++;
+                }
+                if (wasAlive && !isNowAlive) {
+                    newlyDeceased++;
                 }
             }
         }
 
-        boardState = nextBoardState;
+        deceasedCount += newlyDeceased;
         generationCount++;
     }
 
     /**
-     * Counts the number of living cells in the 8-neighbor Moore neighborhood.
-     * * <pre>
-     * Implementation:  Iterates from -1 to 1 in both axes, skipping the center.
-     * Special Cases:   Boundaries are checked to prevent ArrayIndexOutOfBoundsException.
-     * </pre>
+     * Calculates the number of living cells in the 8 adjacent positions
+     * surrounding a specific coordinate.
      *
      * @param row the row index of the target cell
      * @param col the column index of the target cell
-     * @return the count of living neighbors (0-8)
+     * @return the number of adjacent living cells
      */
     private int countLivingNeighbors(int row, int col) {
         int count = 0;
@@ -134,7 +129,7 @@ public class LifeLogic {
                 int neighborRow = row + r;
                 int neighborCol = col + c;
                 if (neighborRow >= 0 && neighborRow < logicRows && neighborCol >= 0 && neighborCol < logicCols) {
-                    if (boardState[neighborRow][neighborCol]) {
+                    if (boardState[neighborRow][neighborCol].isAlive()) {
                         count++;
                     }
                 }
@@ -144,26 +139,56 @@ public class LifeLogic {
     }
 
     /**
-     * Toggles the state of a specific cell (Alive -> Dead, Dead -> Alive).
-     * @param row the row index to toggle
-     * @param col the column index to toggle
+     * Inverts the living state of a specific cell; if it is alive,
+     * it becomes dead, and vice versa.
+     *
+     * @param row the row index of the target cell
+     * @param col the column index of the target cell
      */
     public void toggleLiving(int row, int col) {
-        boardState[row][col] = !boardState[row][col];
+        boolean currentState = boardState[row][col].isAlive();
+        boardState[row][col].setAlive(!currentState);
     }
 
     /**
-     * Checks if a specific cell is currently alive.
-     * @param row the row index to check
-     * @param col the column index to check
-     * @return {@code true} if the cell is alive, {@code false} otherwise
+     * Checks the current living state of the specific {@code AbstractCell}
+     * at the given coordinates.
+     *
+     * @param row the row index of the target cell
+     * @param col the column index of the target cell
+     * @return true if the cell is alive, false otherwise
      */
     public boolean isAlive(int row, int col) {
+        return boardState[row][col].isAlive();
+    }
+
+    /**
+     * Retrieves the specific {@code AbstractCell} object located at the given coordinates.
+     *
+     * @param row the row index of the target cell
+     * @param col the column index of the target cell
+     * @return the {@code AbstractCell} at the specified location
+     */
+    public AbstractCell getCell(int row, int col) {
         return boardState[row][col];
     }
 
     /**
-     * Returns the total number of generations processed since initialization.
+     * Replaces the cell at the specified coordinates with a new {@code AbstractCell} instance
+     * (e.g., swapping an {@code AnimalCell} for a {@code WallCell}).
+     *
+     * @param row  the row index of the target cell
+     * @param col  the column index of the target cell
+     * @param cell the new {@code AbstractCell} to place at the coordinates
+     */
+    public void setCell(int row, int col, AbstractCell cell) {
+        boardState[row][col] = cell;
+    }
+
+    /**
+     * Retrieves the total number of generations (ticks) that have occurred
+     * since the simulation started.
+     *
      * @return the generation count
      */
     public int getGenerationCount() {
@@ -171,16 +196,20 @@ public class LifeLogic {
     }
 
     /**
-     * Returns the number of living cells currently on the board.
-     * @return the count of alive cells
+     * Returns the current population count of all alive cells on the board
+     * for the current generation.
+     *
+     * @return the number of living cells
      */
     public int getLivingCount() {
         return livingCount;
     }
 
     /**
-     * Returns the number of cells that died during the last generation transition.
-     * @return the count of deceased cells
+     * Returns the cumulative number of cells that have transitioned from alive
+     * to dead over the course of the simulation.
+     *
+     * @return the total number of deceased cells
      */
     public int getDeceasedCount() {
         return deceasedCount;

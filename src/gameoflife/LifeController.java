@@ -6,28 +6,26 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 
 /**
- * Controller for the Game of Life JavaFX application.
- * This class manages the interaction between the user interface and the game
- * logic, handling board rendering, animation timing, and statistical tracking.
+ * Controller class for the Game of Life JavaFX application.
+ * Acts as the bridge between the FXML UI and the underlying logical model ({@code LifeLogic}).
+ * Manages user input, updates visual components based on the logical state, and controls the animation loop.
  *
  * <pre>
  * File            LifeController.java
  * Project         Game of Life
  * Platform        PC, Windows 11; JDK 25
  * Course          CS 142
- * Date            02/22/2026
+ * Date            02/24/2026
  * </pre>
  *
  * @author          Jarrell Quincy | r3lic
- * @version         1.0.0
+ * @version         2.0.0
  * @since           1.0.0
- * @see             LifeLogic
- * @see             LifeCell
- * @see             LifeStat
  */
 public class LifeController {
     /* ---------- Game Board ----------*/
@@ -37,42 +35,62 @@ public class LifeController {
     private LifeCell[][] uiState;
 
     /* ---------- CONTROLS ----------- */
+    // Board Size
     @FXML
     private Spinner<Integer> colSpinner;
     @FXML
     private Spinner<Integer> rowSpinner;
+
+    // Cell Size
     @FXML
     private Spinner<Integer> cellWidthSpinner;
     @FXML
     private Spinner<Integer> cellHeightSpinner;
+
+
+    // Cell Colors
     @FXML
-    private Slider speedSlider;
+    private ColorPicker deadAnimalColorPicker;
     @FXML
-    private ColorPicker deadColorPicker;
+    private ColorPicker deadPlantColorPicker;
     @FXML
-    private ColorPicker liveColorPicker;
+    private ColorPicker liveAnimalColorPicker;
+    @FXML
+    private ColorPicker livePlantColorPicker;
+    @FXML
+    private ColorPicker wallColorPicker;
     @FXML
     private ColorPicker strokeColorPicker;
+
+    // Cell Type Radio Buttons
+    @FXML
+    private ToggleGroup cellTypeGroup;
+    @FXML
+    private Toggle animalToggle;
+    @FXML
+    private Toggle plantToggle;
+    @FXML
+    private Toggle wallToggle;
+
+    // Game Speed
+    @FXML
+    private Slider speedSlider;
+
+    // Start/Stop Button
     @FXML
     private Button startStopButton;
 
     /* ---------- UI VARIABLES ---------- */
-    private Color deadColor;
-    private Color liveColor;
+    private Color liveAnimalColor;
+    private Color deadAnimalColor;
+    private Color livePlantColor;
+    private Color deadPlantColor;
+    private Color wallColor;
     private Color strokeColor;
     private int boardRows;
     private int boardCols;
     private int cellWidth;
     private int cellHeight;
-
-    /* ---------- DEFAULT UI VALUES ---------- */
-    private final Color DEFAULT_DEAD_COLOR = Color.RED;
-    private final Color DEFAULT_LIVE_COLOR = Color.GREEN;
-    private final Color DEFAULT_STROKE_COLOR = Color.WHITE;
-    private final int DEFAULT_BOARD_ROWS = 17;
-    private final int DEFAULT_BOARD_COLS = 17;
-    private final int DEFAULT_CELL_WIDTH = 30;
-    private final int DEFAULT_CELL_HEIGHT = 30;
 
     /* ---------- STATS TABLE ---------- */
     @FXML
@@ -87,7 +105,6 @@ public class LifeController {
     private LifeStat generationStat;
     private LifeStat livingStat;
     private LifeStat deceasedStat;
-//    private LifeStat processingTimeStat;
 
     /* ---------- ANIMATION CONTROL ---------- */
     private AnimationTimer gameLoop;
@@ -105,7 +122,8 @@ public class LifeController {
      */
     @FXML
     public void initialize() {
-        setupUIControls();
+        setupSpinners();
+        setDefaultValues();
         setupListeners();
         setupStatsTables();
         getCurrentSettings();
@@ -121,19 +139,44 @@ public class LifeController {
      * Configures the value factories for all Spinner controls.
      * Sets range constraints for board dimensions and cell sizes.
      */
-    private void setupUIControls() {
-        colSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, DEFAULT_BOARD_COLS));
-        rowSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, DEFAULT_BOARD_ROWS));
-        cellWidthSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, DEFAULT_CELL_WIDTH));
-        cellHeightSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, DEFAULT_CELL_HEIGHT));
-        deadColorPicker.setValue(DEFAULT_DEAD_COLOR);
-        liveColorPicker.setValue(DEFAULT_LIVE_COLOR);
-        strokeColorPicker.setValue(DEFAULT_STROKE_COLOR);
+    private void setupSpinners() {
+        rowSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, Defaults.BOARD_ROWS));
+        colSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, Defaults.BOARD_COLS));
+        cellWidthSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, Defaults.CELL_WIDTH));
+        cellHeightSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, Defaults.CELL_HEIGHT));
+    }
+
+    /**
+     * Applies default values to all UI input controls (spinners, color pickers, and speed slider)
+     * based on the constant values defined in the {@code Defaults} class.
+     */
+    private void setDefaultValues() {
+        rowSpinner.getValueFactory().setValue(Defaults.BOARD_ROWS);
+        colSpinner.getValueFactory().setValue(Defaults.BOARD_COLS);
+        cellWidthSpinner.getValueFactory().setValue(Defaults.CELL_WIDTH);
+        cellHeightSpinner.getValueFactory().setValue(Defaults.CELL_HEIGHT);
+
+        liveAnimalColorPicker.setValue(Defaults.ANIMAL_LIVE);
+        deadAnimalColorPicker.setValue(Defaults.ANIMAL_DEAD);
+        livePlantColorPicker.setValue(Defaults.PLANT_LIVE);
+        deadPlantColorPicker.setValue(Defaults.PLANT_DEAD);
+        wallColorPicker.setValue(Defaults.WALL);
+        strokeColorPicker.setValue(Defaults.STROKE);
+
+        liveAnimalColor = Defaults.ANIMAL_LIVE;
+        deadAnimalColor = Defaults.ANIMAL_DEAD;
+        livePlantColor = Defaults.PLANT_LIVE;
+        deadPlantColor = Defaults.PLANT_DEAD;
+        wallColor = Defaults.WALL;
+        strokeColor = Defaults.STROKE;
+
+        speedSlider.setValue(Defaults.TICK_SPEED);
     }
 
     /**
      * Attaches change listeners to UI components to handle real-time updates.
-     * Manages board resizing, color theme changes, and cell scaling.
+     * Manages board resizing, color theme changes, and cell scaling dynamically
+     * as the user interacts with the application.
      */
     private void setupListeners() {
         rowSpinner.valueProperty().addListener((_, _, newValue) -> {
@@ -145,19 +188,6 @@ public class LifeController {
             handleResize();
         });
 
-        deadColorPicker.valueProperty().addListener((_, _, newValue) -> {
-            deadColor = newValue;
-            syncUILogicState();
-        });
-        liveColorPicker.valueProperty().addListener((_, _, newValue) -> {
-            liveColor = newValue;
-            syncUILogicState();
-        });
-        strokeColorPicker.valueProperty().addListener((_, _, newValue) -> {
-            strokeColor = newValue;
-            syncUILogicState();
-        });
-
         cellWidthSpinner.valueProperty().addListener((_, _, newValue) -> {
             cellWidth = newValue;
             updateCellDimensions();
@@ -165,6 +195,32 @@ public class LifeController {
         cellHeightSpinner.valueProperty().addListener((_, _, newValue) -> {
             cellHeight = newValue;
             updateCellDimensions();
+        });
+
+        liveAnimalColorPicker.valueProperty().addListener((_, _, newValue) -> {
+            liveAnimalColor = newValue;
+            syncUILogicState();
+        });
+        deadAnimalColorPicker.valueProperty().addListener((_, _, newValue) -> {
+            deadAnimalColor = newValue;
+            syncUILogicState();
+        });
+
+        livePlantColorPicker.valueProperty().addListener((_, _, newValue) -> {
+            livePlantColor = newValue;
+            syncUILogicState();
+        });
+        deadPlantColorPicker.valueProperty().addListener((_, _, newValue) -> {
+            deadPlantColor = newValue;
+            syncUILogicState();
+        });
+        wallColorPicker.valueProperty().addListener((_, _, newValue) -> {
+            wallColor = newValue;
+            syncUILogicState();
+        });
+        strokeColorPicker.valueProperty().addListener((_, _, newValue) -> {
+            strokeColor = newValue;
+            syncUILogicState();
         });
     }
 
@@ -196,10 +252,8 @@ public class LifeController {
         generationStat = new LifeStat("Generations", 0);
         livingStat = new LifeStat("Living Cells", 0);
         deceasedStat = new LifeStat("Deceased Cells", 0);
-//        processingTimeStat = new LifeStat("Processing Time (ms)", 0);
 
         statsData.addAll(generationStat, livingStat, deceasedStat);
-//        statsData.addAll(generationStat, livingStat, deceasedStat, processingTimeStat);
         statsTable.setItems(statsData);
     }
 
@@ -220,8 +274,11 @@ public class LifeController {
         boardCols = colSpinner.getValue();
         cellWidth = cellWidthSpinner.getValue();
         cellHeight = cellHeightSpinner.getValue();
-        deadColor = deadColorPicker.getValue();
-        liveColor = liveColorPicker.getValue();
+        liveAnimalColor = liveAnimalColorPicker.getValue();
+        deadAnimalColor = deadAnimalColorPicker.getValue();
+        livePlantColor = livePlantColorPicker.getValue();
+        deadPlantColor = deadPlantColorPicker.getValue();
+        wallColor = wallColorPicker.getValue();
         strokeColor = strokeColorPicker.getValue();
     }
 
@@ -229,8 +286,7 @@ public class LifeController {
      * Initializes the {@code AnimationTimer} responsible for the game loop.
      * * <pre>
      * Implementation:  Calculates the tick interval based on the {@code speedSlider}.
-     * The tick is executed only if the elapsed time exceeds
-     * the interval.
+     * The tick is executed only if the elapsed time exceeds the interval.
      * </pre>
      */
     private void setupAnimationTimer() {
@@ -264,12 +320,7 @@ public class LifeController {
 
         for (int r = 0; r < boardRows; r++) {
             for (int c = 0; c < boardCols; c++) {
-                LifeCell cell = new LifeCell(cellWidth, cellHeight);
-                cell.setStroke(strokeColor);
-
-                final int row = r;
-                final int col = c;
-                cell.setOnMouseClicked(_ -> onCellClicked(cell, row, col));
+                LifeCell cell = createLifeCell(r, c);
 
                 uiState[r][c] = cell;
                 gameBoard.add(cell, c, r);
@@ -280,14 +331,52 @@ public class LifeController {
     }
 
     /**
-     * Synchronizes the visual state of {@code LifeCell} objects with the logic state.
-     * Updates colors based on the living/dead status and refreshes the stats table.
+     * Instantiates a visual {@code LifeCell}, applies stroke settings, and attaches
+     * left/right mouse click event handlers.
+     * @param r the row index for the new cell
+     * @param c the column index for the new cell
+     * @return the configured visual cell object
+     */
+    private LifeCell createLifeCell(int r, int c) {
+        LifeCell cell = new LifeCell(cellWidth, cellHeight);
+        cell.setStroke(strokeColor);
+
+        final int row = r;
+        final int col = c;
+        cell.setOnMouseClicked(event -> {
+            MouseButton button = event.getButton();
+            if (button == MouseButton.PRIMARY) {
+                onCellLeftClicked(cell, row, col);
+            } else if (button == MouseButton.SECONDARY) {
+                onCellRightClicked(row, col);
+            }
+
+        });
+        return cell;
+    }
+
+    /**
+     * Synchronizes the visual state of {@code LifeCell} objects with the internal logic state.
+     * Queries the logical model to update the visual color of each cell based on its living status
+     * and specific {@code CellType}. Also refreshes the data in the stats table.
      */
     private void syncUILogicState() {
+        Color cellColor;
+
         for (int r = 0; r < uiState.length; r++) {
             for (int c = 0; c < uiState[0].length; c++) {
                 boolean living = logicState.isAlive(r, c);
-                uiState[r][c].setFill(living ? liveColor : deadColor);
+                CellType cellType = logicState.getCell(r, c).getCellType();
+
+                if (cellType == CellType.PLANT) {
+                    cellColor = living ? livePlantColor : deadPlantColor;
+                } else if (cellType == CellType.ANIMAL) {
+                    cellColor = living ? liveAnimalColor : deadAnimalColor;
+                } else {
+                    cellColor = wallColor;
+                }
+
+                uiState[r][c].setFill(cellColor);
                 uiState[r][c].setStroke(strokeColor);
             }
         }
@@ -296,63 +385,84 @@ public class LifeController {
     }
 
     /**
-     * Advances the game by one generation and measures processing performance.
-     * * <pre>
-     * Implementation:  Wraps the logic calculation and UI sync in nanoTime measurements.
-     * Time Complexity: O(rows * cols) for the sync step.
-     * </pre>
+     * Advances the simulation by calculating the next generation in the logic model,
+     * then synchronizing the UI to reflect those changes.
      */
     @FXML
     private void tick() {
-        /* ---------- START PROCESS TIME MEASUREMENT ---------- */
-        // Measure time in nanoseconds
-//        long startTime = System.nanoTime();
-
         logicState.calculateNextGeneration();
         syncUILogicState();
-
-//        long endTime = System.nanoTime();
-
-        // Convert nanoseconds to milliseconds (1,000,000 ns = 1 ms)
-//        int elapsedTime = (int) ((endTime - startTime) / 1_000_000);
-        /* ---------- END PROCESSING TIME MEASUREMENT */
-
-//        processingTimeStat.setValue(elapsedTime);
     }
 
     /**
-     * Handles board resizing while attempting to preserve the existing cell states.
+     * Handles resizing the logic board when dimensions change.
      * * <pre>
-     * Implementation:  Creates a new boolean array and uses {@code System.arraycopy}
-     * to migrate existing cell data to the new dimensions.
+     * Implementation:  Creates a new {@code AbstractCell} array and uses {@code System.arraycopy}
+     * to migrate existing cell states to the new dimensions. Space outside the
+     * previous bounds will be filled with default dead AnimalCells.
      * Postconditions:  The logic board is updated and the UI is rebuilt.
      * </pre>
      */
     private void handleResize() {
-        boolean[][] oldBoardState = logicState.getBoardState();
-        boolean[][] nextBoardState = new boolean[boardRows][boardCols];
-        int resizedRowCount = Math.min(oldBoardState.length, boardRows);
-        int resizedColCount = Math.min(oldBoardState[0].length, boardCols);
+        AbstractCell[][] oldBoardState = logicState.getBoardState();
+        AbstractCell[][] nextBoardState = new LifeLogic(boardRows, boardCols).getBoardState();
+        int resizedRowCount = Math.min(oldBoardState.length, nextBoardState.length);
+        int resizedColCount = Math.min(oldBoardState[0].length, nextBoardState[0].length);
 
         for (int r = 0; r < resizedRowCount; r++) {
             System.arraycopy(oldBoardState[r], 0, nextBoardState[r], 0, resizedColCount);
         }
 
         logicState.setBoardState(nextBoardState);
-        logicState.calculateNextGeneration();
 
         rebuildUI();
     }
 
     /**
-     * Manages logic and UI updates when an individual cell is clicked.
-     * * @param cell the {@code LifeCell} UI component that was clicked (must not be null)
+     * Toggles the living state of a cell within the logic model and updates its visual color
+     * immediately without requiring a full UI sync.
+     * @param cell the {@code LifeCell} UI component that was clicked (must not be null)
      * @param row  the row index of the cell
      * @param col  the column index of the cell
      */
-    private void onCellClicked(LifeCell cell, int row, int col) {
+    private void onCellLeftClicked(LifeCell cell, int row, int col) {
         logicState.toggleLiving(row, col);
-        cell.setFill(logicState.isAlive(row, col) ? liveColor : deadColor);
+
+        CellType cellType = logicState.getCell(row, col).getCellType();
+        boolean living = logicState.isAlive(row, col);
+        Color cellColor;
+
+        if (cellType == CellType.PLANT) {
+            cellColor = living ? livePlantColor : deadPlantColor;
+        } else if (cellType == CellType.ANIMAL) {
+            cellColor = living ? liveAnimalColor : deadAnimalColor;
+        } else {
+            cellColor = wallColor;
+        }
+
+        cell.setFill(cellColor);
+    }
+
+    /**
+     * Replaces the target cell in the logic model with a new cell type (Animal, Plant, or Wall)
+     * depending on which radio toggle is selected, then synchronizes the UI.
+     * @param row  the row index of the cell
+     * @param col  the column index of the cell
+     */
+    private void onCellRightClicked(int row, int col) {
+        Toggle cellToggle = cellTypeGroup.getSelectedToggle();
+        AbstractCell newCell;
+
+        if (cellToggle.equals(animalToggle)) {
+            newCell = new AnimalCell(false);
+        } else if (cellToggle.equals(plantToggle)) {
+            newCell = new PlantCell(true);
+        } else {
+            newCell = new WallCell();
+        }
+
+        logicState.setCell(row, col, newCell);
+        syncUILogicState();
     }
 
     /**
@@ -370,12 +480,13 @@ public class LifeController {
     private void stopGame() {
         isRunning = false;
         boolean isPaused = startStopButton.getText().equals("Stop");
-        gameLoop.stop();
         startStopButton.setText(isPaused ? "Resume" : "Start");
+        gameLoop.stop();
     }
 
     /**
-     * Toggle handler for the Start/Stop button.
+     * Acts as a toggle switch, calling either {@code startGame()} or {@code stopGame()}
+     * based on the current state of the animation loop.
      */
     @FXML
     private void onStartStopClicked() {
@@ -388,7 +499,6 @@ public class LifeController {
 
     /**
      * Resets the entire game to its default state.
-     * Stops any running animation and restores all UI control default values.
      */
     @FXML
     private void resetGame() {
@@ -396,36 +506,22 @@ public class LifeController {
         gameLoop.stop();
         startStopButton.setText("Start");
 
-        rowSpinner.getValueFactory().setValue(DEFAULT_BOARD_ROWS);
-        colSpinner.getValueFactory().setValue(DEFAULT_BOARD_COLS);
-        cellWidthSpinner.getValueFactory().setValue(DEFAULT_CELL_WIDTH);
-        cellHeightSpinner.getValueFactory().setValue(DEFAULT_CELL_HEIGHT);
-        deadColorPicker.setValue(DEFAULT_DEAD_COLOR);
-        liveColorPicker.setValue(DEFAULT_LIVE_COLOR);
-        strokeColorPicker.setValue(DEFAULT_STROKE_COLOR);
-
-        int DEFAULT_GAME_SPEED = 200;
-        speedSlider.setValue(DEFAULT_GAME_SPEED);
-
-        deadColor = DEFAULT_DEAD_COLOR;
-        liveColor = DEFAULT_LIVE_COLOR;
-        strokeColor = DEFAULT_STROKE_COLOR;
-        cellWidth = DEFAULT_CELL_WIDTH;
-        cellHeight = DEFAULT_CELL_HEIGHT;
-
-        logicState = new LifeLogic(DEFAULT_BOARD_ROWS, DEFAULT_BOARD_COLS);
-        rebuildUI();
+        setDefaultValues();
+        logicState = new LifeLogic(boardRows, boardCols);
+        updateStatsTable();
     }
 
     /**
-     * Clears all living cells from the board.
-     * * <pre>
+     * Leaves current settings intact but wipes the current board by instantiating
+     * a new {@code LifeLogic} instance and syncing the UI.
+     * <pre>
      * Postconditions:  All cells in logicState are set to dead.
      * The UI is updated to reflect the empty board.
      * </pre>
      */
     @FXML
     private void clearBoard() {
+        stopGame();
         logicState = new LifeLogic(boardRows, boardCols);
         syncUILogicState();
     }
