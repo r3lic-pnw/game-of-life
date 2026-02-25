@@ -3,7 +3,7 @@
 A remix of John Conway's Game of Life.  
 Built with Java and JavaFX, this project was developed as the Final Programming Project for CS 142 (Winter 2026).
 
-Unlike the traditional Game of Life, this simulator introduces a polymorphic grid featuring multiple distinct cell 
+Unlike the traditional Game of Life, this simulator introduces distinct cell 
 types, each with its own unique survival and reproduction rules.
 
 ## Features
