@@ -31,7 +31,7 @@ public class AnimalCell extends OrganicCell{
         if(isAlive) {
             nextState = (livingNeighbors == 2 || livingNeighbors == 3);
         } else {
-            nextState = (livingNeighbors ==3);
+            nextState = (livingNeighbors == 3);
         }
     }
 

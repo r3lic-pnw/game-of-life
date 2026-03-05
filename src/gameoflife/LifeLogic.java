@@ -81,7 +81,6 @@ public class LifeLogic {
      */
     public void calculateNextGeneration() {
         int newlyDeceased = 0;
-        int newlyLiving = 0;
 
         // Calculate next state for all cells
         for (int r = 0; r < logicRows; r++) {
